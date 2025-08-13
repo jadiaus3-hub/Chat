@@ -30,7 +30,8 @@ export const insertGeneratedImageSchema = createInsertSchema(generatedImages).pi
   prompt: true,
   imageUrl: true,
   model: true,
-  settings: true,
+}).extend({
+  settings: z.any().optional(),
 });
 
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;

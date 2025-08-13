@@ -73,6 +73,7 @@ export class MemStorage implements IStorage {
       ...insertImage,
       id,
       timestamp: new Date(),
+      settings: insertImage.settings || null,
     };
     this.generatedImages.set(id, image);
     return image;
