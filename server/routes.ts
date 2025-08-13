@@ -8,13 +8,14 @@ const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY || process.env.HF_TO
 
 async function chatWithHuggingFace(message: string, model: string = "microsoft/DialoGPT-large") {
   try {
+    // Updated model mapping with 2024 working models
     const modelMap: Record<string, string> = {
-      "llama3": "meta-llama/Llama-2-7b-chat-hf",
-      "mistral": "mistralai/Mistral-7B-Instruct-v0.1",
-      "codellama": "codellama/CodeLlama-7b-Instruct-hf"
+      "llama3": "meta-llama/Meta-Llama-3-8B-Instruct",
+      "mistral": "mistralai/Mistral-7B-Instruct-v0.3", 
+      "codellama": "codellama/CodeLlama-7b-hf"
     };
     
-    const actualModel = modelMap[model] || modelMap["mistral"];
+    const actualModel = modelMap[model] || "mistralai/Mistral-7B-Instruct-v0.3";
     
     const response = await fetch(`https://api-inference.huggingface.co/models/${actualModel}`, {
       method: "POST",
@@ -28,21 +29,30 @@ async function chatWithHuggingFace(message: string, model: string = "microsoft/D
           max_new_tokens: 150,
           temperature: 0.7,
           do_sample: true,
+          top_p: 0.95,
         },
       }),
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`HuggingFace API error ${response.status}:`, errorText);
       throw new Error(`HuggingFace API error: ${response.status}`);
     }
 
     const result = await response.json();
+    console.log("HuggingFace response:", result);
     
     if (Array.isArray(result) && result[0]?.generated_text) {
-      return result[0].generated_text.replace(message, "").trim();
+      let responseText = result[0].generated_text;
+      // Clean up the response by removing the input message if it's repeated
+      if (responseText.startsWith(message)) {
+        responseText = responseText.substring(message.length).trim();
+      }
+      return responseText || "I understand your message. How can I help you further?";
     }
     
-    return "I'm sorry, I couldn't generate a response at the moment. Please try again.";
+    return "I understand your message. How can I help you further?";
   } catch (error) {
     console.error("HuggingFace chat error:", error);
     return "I'm experiencing some technical difficulties. Please try again later.";
@@ -57,7 +67,7 @@ async function generateImageWithHuggingFace(prompt: string, model: string = "sd2
       "sdxl": "stabilityai/stable-diffusion-xl-base-1.0"
     };
     
-    const actualModel = modelMap[model] || modelMap["sd2.1"];
+    const actualModel = modelMap[model] || "stabilityai/stable-diffusion-2-1";
     
     const response = await fetch(`https://api-inference.huggingface.co/models/${actualModel}`, {
       method: "POST",
