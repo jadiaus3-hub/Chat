@@ -60,48 +60,62 @@ async function chatWithHuggingFace(message: string, model: string = "gpt2") {
 }
 
 function generateLocalResponse(message: string, model: string): string {
-  // Simple pattern-based responses while HuggingFace issues are resolved
   const lowerMessage = message.toLowerCase();
   
-  const responses = {
-    llama3: [
-      "Hello! I'm Llama, an AI assistant. How can I help you today?",
-      "I understand your question. Let me think about that...",
-      "That's an interesting point. Here's what I think:",
-      "I'm here to help! What would you like to know more about?",
-    ],
-    mistral: [
-      "Hi there! I'm Mistral. How can I assist you?",
-      "I see what you're asking. Let me help you with that.",
-      "That's a great question! Here's my thoughts:",
-      "I'm ready to help. What else can I do for you?",
-    ],
-    codellama: [
-      "Hello! I'm CodeLlama, specialized in programming. What code can I help with?",
-      "I can help you with coding questions. What programming language are you working with?",
-      "Let me assist you with that code. What specifically are you trying to achieve?",
-      "I'm here for your programming needs. How can I help?",
-    ],
-  };
-
-  // Greeting responses
-  if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('สวัสดี')) {
-    return responses[model as keyof typeof responses]?.[0] || responses.mistral[0];
+  // Thai language support
+  const isThaiGreeting = lowerMessage.includes('สวัสดี') || lowerMessage.includes('หวัดดี');
+  const isThaiHelp = lowerMessage.includes('ช่วย') || lowerMessage.includes('ช่วยหน่อย');
+  const isThaiQuestion = lowerMessage.includes('คุย') || lowerMessage.includes('ตอบ') || lowerMessage.includes('บอก');
+  
+  // Greetings
+  if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || isThaiGreeting) {
+    const greetings = {
+      llama3: "Hello! I'm Llama. What can I help you with today?",
+      mistral: "Hi! I'm Mistral, ready to assist you.",
+      codellama: "Hello! I'm CodeLlama, here for your programming needs."
+    };
+    return greetings[model as keyof typeof greetings] || greetings.mistral;
+  }
+  
+  // 3D/Model creation requests
+  if (lowerMessage.includes('create') && (lowerMessage.includes('model') || lowerMessage.includes('3d'))) {
+    return "I understand you want to create a 3D model. While I can't generate actual 3D files, I can help you with:\n\n• 3D modeling concepts and techniques\n• Code for 3D graphics (Three.js, WebGL)\n• Blender or other 3D software guidance\n• Mathematical foundations for 3D graphics\n\nWhat specific aspect would you like help with?";
+  }
+  
+  // Gun/weapon related (redirect to appropriate content)
+  if (lowerMessage.includes('gun') || lowerMessage.includes('weapon')) {
+    return "I can help with general 3D modeling techniques, but I'd prefer to focus on creative, educational, or positive applications. I can assist with:\n\n• Game development assets\n• Educational models\n• Artistic sculptures\n• Mechanical components\n\nWhat type of project are you working on?";
+  }
+  
+  // Programming/code questions
+  if (lowerMessage.includes('code') || lowerMessage.includes('program') || lowerMessage.includes('โค้ด')) {
+    return "I'd be happy to help with coding! I can assist with:\n\n• JavaScript and web development\n• Three.js for 3D graphics\n• React and frontend frameworks\n• API development\n• Database design\n\nWhat programming challenge are you facing?";
+  }
+  
+  // Thai language questions
+  if (isThaiQuestion || lowerMessage.includes('ภาษาไทย')) {
+    return "ใช่ครับ ผมสามารถเข้าใจภาษาไทยได้ แต่ผมจะตอบเป็นภาษาอังกฤษเป็นหลัก ผมช่วยอะไรคุณได้บ้างครับ?\n\nYes, I can understand Thai, but I primarily respond in English. How can I help you?";
   }
   
   // Help requests
-  if (lowerMessage.includes('help') || lowerMessage.includes('ช่วย')) {
-    return responses[model as keyof typeof responses]?.[3] || responses.mistral[3];
+  if (lowerMessage.includes('help') || isThaiHelp) {
+    return "I'm here to help! I can assist with:\n\n• Programming and web development\n• 3D graphics and modeling concepts\n• Math and technical explanations\n• Project planning and guidance\n\nWhat would you like help with specifically?";
   }
   
-  // Code-related
-  if (lowerMessage.includes('code') || lowerMessage.includes('program') || lowerMessage.includes('โค้ด')) {
-    return responses.codellama[1];
+  // Questions
+  if (lowerMessage.includes('?') || lowerMessage.includes('what') || lowerMessage.includes('how') || lowerMessage.includes('why')) {
+    return "That's a great question! I'd be happy to help explain or provide guidance. Could you give me a bit more context about what you're trying to understand or accomplish?";
   }
   
-  // Default response
-  const modelResponses = responses[model as keyof typeof responses] || responses.mistral;
-  return modelResponses[Math.floor(Math.random() * modelResponses.length)];
+  // Default contextual response
+  const contextualResponses = [
+    "I see you're asking about that. Let me provide some helpful information based on what you've mentioned.",
+    "Interesting question! I'd be happy to help you explore that topic further.",
+    "I understand what you're getting at. Let me offer some guidance on that.",
+    "That's something I can definitely help with. What specific aspect interests you most?",
+  ];
+  
+  return contextualResponses[Math.floor(Math.random() * contextualResponses.length)] + " Could you provide a bit more detail about what you're looking for?";
 }
 
 async function generateImageWithHuggingFace(prompt: string, model: string = "sd2.1") {
